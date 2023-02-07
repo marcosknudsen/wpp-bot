@@ -20,6 +20,7 @@ export default async function getLiveStreams(streamerArray) {
   );
   response = await response.json();
   response = response.data;
+  response=response.sort((a,b)=>a.user_name.localeCompare(b.user_name))
   if (response.length > 0) {
     string = "Canales favoritos en vivo:\n";
     for (let i of response) {
