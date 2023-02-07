@@ -1,4 +1,6 @@
 import fetch from "node-fetch";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 export default async function getLiveStreams(streamerArray) {
   let string;
