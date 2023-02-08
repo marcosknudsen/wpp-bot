@@ -2,10 +2,10 @@ import matches from "../promiedos/index.js"
 
 export async function getMatches(id){
     let response=await matches(id);
-    let string='Proximos partidos:\n';
+    let string=`Proximos partidos de ${response.teamname}:\n`;
     let fecha;
     let date;
-    for (let i of response){
+    for (let i of response.matches){
         date=i.day
         if (date=="A Conf."){
             date=" TBD "

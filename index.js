@@ -66,6 +66,10 @@ client.on("message", async (msg) => {
     if (!isNaN(light)) turnOff(light);
   } else if (msg.body.startsWith("!aldosivi")) {
     client.sendMessage(msg.from, await getMatches(22));
+  } else if (msg.body.startsWith("!matches")) {
+    let team = parseInt(msg.body.replace("!matches ", ""));
+    if (isNaN(team)) client.sendMessage(msg.from, "ERROR");
+    else client.sendMessage(msg.from, await getMatches(team));
   }
 });
 
