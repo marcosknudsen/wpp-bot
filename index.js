@@ -68,7 +68,7 @@ client.on("message", async (msg) => {
     client.sendMessage(msg.from, await getMatches(22));
   } else if (msg.body.startsWith("!matches")) {
     let team = parseInt(msg.body.replace("!matches ", ""));
-    if (isNaN(team)) client.sendMessage(msg.from, "ERROR");
+    if (isNaN(team)) client.sendMessage(msg.from, "Error: Compruebe haber insertado el team id correctamente (!matches {id})");
     else client.sendMessage(msg.from, await getMatches(team));
   }
 });
