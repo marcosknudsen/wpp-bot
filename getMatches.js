@@ -6,12 +6,12 @@ export async function getMatches(id){
     let fecha;
     let date;
     for (let i of response){
-        date=i.dia
+        date=i.day
         if (date=="A Conf."){
             date=" TBD "
         }
-        fecha=parseInt(i.fecha)
-        string=string+(`${date} | ${i.lov} vs ${i.rival}\n`)
+        fecha=parseInt(i.matchN)
+        string=string+(`${date} | ${i.hoa=="H"?"L":"V"} vs ${i.against}\n`)
     }
     return string;
 }

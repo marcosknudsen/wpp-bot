@@ -3,6 +3,7 @@ import QRCode from "qrcode";
 import * as dotenv from "dotenv";
 import getLiveStreams from "./getStreamInfo.js";
 import { isOn, turnOff, turnOn } from "./hueApi.js";
+import { getMatches } from "./getMatches.js";
 
 dotenv.config();
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
@@ -45,7 +46,7 @@ client.on("message", async (msg) => {
     msg.body.startsWith("!isOn") &&
     msg.from.startsWith(process.env.KANU_NUMBER)
   ) {
-    let light = parseInt(msg.body.replace("!isOn ", ""))
+    let light = parseInt(msg.body.replace("!isOn ", ""));
     if (!isNaN(light))
       client.sendMessage(
         msg.from,
@@ -63,6 +64,8 @@ client.on("message", async (msg) => {
   ) {
     let light = parseInt(msg.body.replace("!turnOff ", ""));
     if (!isNaN(light)) turnOff(light);
+  } else if (msg.body.startsWith("!aldosivi")) {
+    client.sendMessage(msg.from, await getMatches(22));
   }
 });
 
