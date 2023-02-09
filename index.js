@@ -4,6 +4,7 @@ import * as dotenv from "dotenv";
 import getLiveStreams from "./getStreamInfo.js";
 import { isOn, turnOff, turnOn } from "./hueApi.js";
 import { getMatches } from "./getMatches.js";
+import getStreamers from "./refreshStreamers.js";
 
 dotenv.config();
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
@@ -31,17 +32,7 @@ client.on("message", async (msg) => {
         client.sendMessage(msg.from, "Im Sorry, Who are you?");
     }
   } else if (msg.body == "!streams") {
-    client.sendMessage(
-      msg.from,
-      await getLiveStreams([
-        "luquitarodriguez",
-        "davooxeneize",
-        "lacobraaa",
-        "benitosdr",
-        "caninarg",
-        "gastonedul",
-      ])
-    );
+    client.sendMessage(msg.from, await getLiveStreams(getStreamers()));
   } else if (
     msg.body.startsWith("!isOn") &&
     msg.from.startsWith(process.env.KANU_NUMBER)
@@ -68,7 +59,11 @@ client.on("message", async (msg) => {
     client.sendMessage(msg.from, await getMatches(22));
   } else if (msg.body.startsWith("!matches")) {
     let team = parseInt(msg.body.replace("!matches ", ""));
-    if (isNaN(team)) client.sendMessage(msg.from, "Error: Compruebe haber insertado el team id correctamente (!matches {id})");
+    if (isNaN(team))
+      client.sendMessage(
+        msg.from,
+        "Error: Compruebe haber insertado el team id correctamente (!matches {id})"
+      );
     else client.sendMessage(msg.from, await getMatches(team));
   }
 });
