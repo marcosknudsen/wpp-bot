@@ -1,15 +1,16 @@
-import { Client } from "whatsapp-web.js";
+import wpp from "whatsapp-web.js";
 import QRCode from "qrcode";
 import * as dotenv from "dotenv";
 import getLiveStreams from "./getStreamInfo.js";
 import { isOn, turnOff, turnOn } from "./hueApi.js";
 import { getMatches } from "./getMatches.js";
 import getStreamers from "./refreshStreamers.js";
+import getImage from "../ia-image-generator/getImage.js"
 
 dotenv.config();
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
-const client = new Client();
+const client = new wpp.Client();
 
 client.on("qr", (qr) => {
   // Generate and scan this code with your phone
@@ -23,15 +24,7 @@ client.on("ready", () => {
 });
 
 client.on("message", async (msg) => {
-  if (msg.body == "!from") {
-    switch (msg.from.substring(0, msg.from.length - 5)) {
-      case process.env.KANU_NUMBER:
-        client.sendMessage(msg.from, "KANU!");
-        break;
-      default:
-        client.sendMessage(msg.from, "Im Sorry, Who are you?");
-    }
-  } else if (msg.body == "!streams") {
+  if (msg.body == "!streams") {
     client.sendMessage(msg.from, await getLiveStreams(getStreamers()));
   } else if (
     msg.body.startsWith("!isOn") &&
@@ -65,6 +58,14 @@ client.on("message", async (msg) => {
         "Error: Compruebe haber insertado el team id correctamente (!matches {id})"
       );
     else client.sendMessage(msg.from, await getMatches(team));
+  }
+  else if(msg.body.startsWith("!image ")){
+    let request=msg.body.replace("!image ","")
+    const mMedia=await wpp.MessageMedia.fromUrl(await getImage(request))
+    client.sendMessage(msg.from,mMedia)
+  }
+  else if (msg.body.startsWith("!help")){
+    client.sendMessage(msg.from,"🤖 Comandos:\n-!streams\n-!aldosivi\n-!matches {team id}\n-!image {description}")
   }
 });
 
