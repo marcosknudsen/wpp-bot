@@ -88,20 +88,23 @@ client.on("message", async (msg) => {
         break;
       case "addStreamer":
         if (
-          !streamers.map((x) => x.toUpperCase()).includes(arg.toUpperCase())
+          !streamers.map((x) => x.toUpperCase()).includes(arg.toUpperCase()) &&
+          admins.includes(msg.from)
         ) {
           streamers.push(arg);
           storage.set("streamers", streamers);
         }
         break;
       case "removeStreamer":
-        var index = streamers
-          .map((x) => x.toUpperCase())
-          .indexOf(arg.toUpperCase());
-        if (index !== -1) {
-          streamers.splice(index, 1);
+        if (admins.includes(msg.from)) {
+          var index = streamers
+            .map((x) => x.toUpperCase())
+            .indexOf(arg.toUpperCase());
+          if (index !== -1) {
+            streamers.splice(index, 1);
+          }
+          storage.set("streamers", streamers);
         }
-        storage.set("streamers", streamers);
         break;
     }
   }
