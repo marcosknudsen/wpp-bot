@@ -3,13 +3,12 @@ import QRCode from "qrcode";
 import * as dotenv from "dotenv";
 import storage from "node-persist";
 import getLiveStreams from "./getStreamInfo.js";
-import { isOn, turnOff, turnOn } from "./hueApi.js";
-import { getMatches } from "./getMatches.js";
+import { isOn, turnOff, turnOn } from "../HUE/hue.js";
+import { getLiveMatchesString, getMatchesByIdString,getTodayMatchesString } from "./getMatchesString.js";
 import getImage from "../ia-image-generator/getImage.js";
 import getCommands from "./getCommands.js";
 
 dotenv.config();
-process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 
 const client = new wpp.Client();
 let admins;
@@ -30,13 +29,13 @@ client.on("ready", async () => {
 
 client.on("message", async (msg) => {
   if (msg.body[0] == "!") {
-    let [command, arg] = getCommands(msg.body);
+    let [command, arg] = getCommands(msg.body.toLowerCase());
     switch (command) {
       case "streams":
         client.sendMessage(msg.from, await getLiveStreams(streamers));
         break;
-      case "isOn":
-        if (admins.includes(msg.from)) {
+      case "ison":
+        if (isAdmin(msg.from)) {
           let light = parseInt(arg);
           if (!isNaN(light))
             client.sendMessage(
@@ -45,20 +44,20 @@ client.on("message", async (msg) => {
             );
         }
         break;
-      case "turnOn":
-        if (admins.includes(msg.from)) {
+      case "turnon":
+        if (isAdmin(msg.from)) {
           let light = parseInt(arg);
           if (!isNaN(light)) turnOn(light);
         }
         break;
-      case "turnOff":
-        if (admins.includes(msg.from)) {
+      case "turnoff":
+        if (isAdmin(msg.from)) {
           let light = parseInt(arg);
           if (!isNaN(light)) turnOff(light);
         }
         break;
       case "aldosivi":
-        client.sendMessage(msg.from, await getMatches(22));
+        client.sendMessage(msg.from,"🦈 "+ await getMatchesByIdString(22));
         break;
       case "matches":
         let team = parseInt(arg);
@@ -67,10 +66,10 @@ client.on("message", async (msg) => {
             msg.from,
             "Error: Compruebe haber insertado el team id correctamente (!matches {id})"
           );
-        else client.sendMessage(msg.from, await getMatches(team));
+        else client.sendMessage(msg.from, await getMatchesByIdString(team));
         break;
       case "login":
-        if (arg == process.env.PASSWORD && !admins.includes(msg.from)) {
+        if (arg == process.env.PASSWORD && !isAdmin(msg.from)) {
           client.sendMessage(msg.from, "Sucessfully loged");
           admins.push(msg.from);
           await storage.set("admins", admins);
@@ -83,20 +82,20 @@ client.on("message", async (msg) => {
       case "help":
         client.sendMessage(
           msg.from,
-          "🤖 Comandos:\n-!streams\n-!aldosivi\n-!matches {team id} (ex:!matches 5)\n-!image {description}(ex:!image messi)\n-!login password"
+          "🤖 Comandos:\n-!streams\n-!aldosivi\n-!matches {team id} (ex: !matches 5)\n-!todaymatches\n-!image {description}(ex: !image messi)\n-!login password"
         );
         break;
-      case "addStreamer":
+      case "addstreamer":
         if (
           !streamers.map((x) => x.toUpperCase()).includes(arg.toUpperCase()) &&
-          admins.includes(msg.from)
+          isAdmin(msg.from)
         ) {
           streamers.push(arg);
           storage.set("streamers", streamers);
         }
         break;
-      case "removeStreamer":
-        if (admins.includes(msg.from)) {
+      case "removestreamer":
+        if (isAdmin(msg.from)) {
           var index = streamers
             .map((x) => x.toUpperCase())
             .indexOf(arg.toUpperCase());
@@ -106,8 +105,22 @@ client.on("message", async (msg) => {
           storage.set("streamers", streamers);
         }
         break;
+      case "todaymatches":
+        client.sendMessage(msg.from, await getTodayMatchesString());
+        break;
+      case "chelsea":
+        client.sendMessage(msg.from,"🔵 "+await getMatchesByIdString(531))
+        break
+      case "livematches":
+        client.sendMessage(msg.from,await getLiveMatchesString())
+      default:
+        client.searchMessages(msg.from,`Error: No se ha encontrado el comando "!${command}"`)
     }
   }
 });
 
 client.initialize();
+
+function isAdmin(user) {
+  return admins.includes(user);
+}

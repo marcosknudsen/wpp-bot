@@ -27,6 +27,6 @@ export default async function getLiveStreams(streamerArray) {
       string = string + `🔴 ${i.user_name} (twitch.tv/${i.user_name}) \n`;
     }
     string = string.slice(0, -1);
-  } else string = "Ninguno de tus streamers favoritos esta en vivo 🥺";
+  } else string = "Ninguno de tus streamers favoritos está en vivo 🥺";
   return string;
 }
