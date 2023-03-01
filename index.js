@@ -4,7 +4,12 @@ import * as dotenv from "dotenv";
 import storage from "node-persist";
 import getLiveStreams from "./getStreamInfo.js";
 import { isOn, turnOff, turnOn } from "../HUE/hue.js";
-import { getLiveMatchesString, getMatchesByIdString,getTodayMatchesString } from "./getMatchesString.js";
+import {
+  getLiveMatchesString,
+  getMatchesByIdString,
+  getMatchesString,
+  getResultsString,
+} from "./getMatchesString.js";
 import getImage from "../ia-image-generator/getImage.js";
 import getCommands from "./getCommands.js";
 
@@ -57,7 +62,7 @@ client.on("message", async (msg) => {
         }
         break;
       case "aldosivi":
-        client.sendMessage(msg.from,"🦈 "+ await getMatchesByIdString(22));
+        client.sendMessage(msg.from, "🦈 " + (await getMatchesByIdString(22)));
         break;
       case "matches":
         let team = parseInt(arg);
@@ -82,7 +87,7 @@ client.on("message", async (msg) => {
       case "help":
         client.sendMessage(
           msg.from,
-          "🤖 Comandos:\n-!streams\n-!aldosivi\n-!matches {team id} (ex: !matches 5)\n-!todaymatches\n-!image {description}(ex: !image messi)\n-!login password"
+          "🤖 Comandos:\n-!streams\n-!aldosivi\n-!matches {team id} (ex: !matches 5)\n-!todaymatches\n-!tomorrowmatches\n-!todayresults\n-!yesterdayresults\n-!image {description}(ex: !image messi)\n-!login password"
         );
         break;
       case "addstreamer":
@@ -106,15 +111,28 @@ client.on("message", async (msg) => {
         }
         break;
       case "todaymatches":
-        client.sendMessage(msg.from, await getTodayMatchesString());
+        client.sendMessage(msg.from, await getMatchesString(true));
+        break;
+      case "tomorrowmatches":
+        client.sendMessage(msg.from, await getMatchesString(false));
         break;
       case "chelsea":
-        client.sendMessage(msg.from,"🔵 "+await getMatchesByIdString(531))
-        break
+        client.sendMessage(msg.from, "🔵 " + (await getMatchesByIdString(531)));
+        break;
       case "livematches":
-        client.sendMessage(msg.from,await getLiveMatchesString())
+        client.sendMessage(msg.from, await getLiveMatchesString());
+        break;
+      case "todayresults":
+        client.sendMessage(msg.from, await getResultsString(true));
+        break;
+      case "yesterdayresults":
+        client.sendMessage(msg.from, await getResultsString(false));
+        break;
       default:
-        client.searchMessages(msg.from,`Error: No se ha encontrado el comando "!${command}"`)
+        client.searchMessages(
+          msg.from,
+          `Error: No se ha encontrado el comando "!${command}"`
+        );
     }
   }
 });
