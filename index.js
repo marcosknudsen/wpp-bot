@@ -81,8 +81,10 @@ client.on("message", async (msg) => {
         }
         break;
       case "image":
-        const mMedia = await wpp.MessageMedia.fromUrl(await getImage(arg));
-        client.sendMessage(msg.from, mMedia);
+        if (isAdmin(msg.from)){
+          const mMedia = await wpp.MessageMedia.fromUrl(await getImage(arg));
+          client.sendMessage(msg.from, mMedia);
+        }
         break;
       case "help":
         client.sendMessage(
@@ -129,10 +131,12 @@ client.on("message", async (msg) => {
         client.sendMessage(msg.from, await getResultsString(false));
         break;
       default:
+        console.log("ERROR")
         client.searchMessages(
           msg.from,
           `Error: No se ha encontrado el comando "!${command}"`
         );
+        break;
     }
   }
 });
