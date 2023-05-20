@@ -224,5 +224,5 @@ function IntoArray(event){
 }
 
 function equalObjects(a,b){
-  return a.from==b.from&&a.message==b.message&&a.date==b.date
+  return JSON.stringify(a)==JSON.stringify(b)
 }
