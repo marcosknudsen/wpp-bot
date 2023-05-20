@@ -12,13 +12,14 @@ import {
 } from "./getMatchesString.js";
 import getImage from "../ia-image-generator/getImage.js";
 import getCommands from "./getCommands.js";
-import { saveEvent } from "../events/index.js";
+import { getRemainingTime, createDate } from "../events/index.js";
 
 dotenv.config();
 
 const client = new wpp.Client();
 let admins;
 let streamers;
+let eventsReady;
 await storage.init();
 
 client.on("qr", (qr) => {
@@ -29,8 +30,11 @@ client.on("qr", (qr) => {
 
 client.on("ready", async () => {
   console.log("Client is ready!");
+  eventsReady = [];
   admins = await storage.getItem("admins");
   streamers = await storage.getItem("streamers");
+  RemoveArray = [];
+  await triggerEvents();
 });
 
 client.on("message", async (msg) => {
@@ -82,19 +86,13 @@ client.on("message", async (msg) => {
           if (arg == process.env.PASSWORD && !isAdmin(msg.from)) {
             client.sendMessage(msg.from, "Sucessfully loged");
             admins.push(msg.from);
-            await storage.set("admins", admins);
-          }
-          break;
-        case "image":
-          if (isAdmin(msg.from)) {
-            const mMedia = await wpp.MessageMedia.fromUrl(await getImage(arg));
-            client.sendMessage(msg.from, mMedia);
+            await storage.updateItem("admins", admins);
           }
           break;
         case "help":
           client.sendMessage(
             msg.from,
-            "🤖 Comandos:\n-!streams\n-!aldosivi\n-!matches {team id} (ex: !matches 5)\n-!todaymatches\n-!tomorrowmatches\n-!todayresults\n-!yesterdayresults\n-!image {description}(ex: !image messi)\n-!login password"
+            "🤖 Comandos:\n-!streams\n-!aldosivi\n-!matches {team id} (ex: !matches 5)\n-!todaymatches\n-!tomorrowmatches\n-!todayresults\n-!yesterdayresults\n-!login password"
           );
           break;
         case "addstreamer":
@@ -105,7 +103,7 @@ client.on("message", async (msg) => {
             isAdmin(msg.from)
           ) {
             streamers.push(arg);
-            storage.set("streamers", streamers);
+            await storage.updateItem("streamers", streamers);
           }
           break;
         case "removestreamer":
@@ -116,7 +114,7 @@ client.on("message", async (msg) => {
             if (index !== -1) {
               streamers.splice(index, 1);
             }
-            storage.set("streamers", streamers);
+            await storage.updateItem("streamers", streamers);
           }
           break;
         case "todaymatches":
@@ -141,14 +139,29 @@ client.on("message", async (msg) => {
           client.sendMessage(msg.from, await getResultsString(false));
           break;
         case "setevent":
-          let timeToEvent = saveEvent(arg[1], arg[2], arg[3], arg[4], arg[5]);
-          setTimeout(() => client.sendMessage(msg.from, arg[0].replaceAll("_"," ")), timeToEvent);
+          let a = await storage.getItem("events");
+          let events = a !== undefined ? a : [];
+          let eventTime=createDate(arg[1],arg[2],arg[3],arg[4],arg[5])
+          events.push({
+            from: msg.from,
+            message: arg[0],
+            date:eventTime
+          });
+          await storage.updateItem("events", events);
+          client.sendMessage(
+            msg.from,
+            `🤖 El evento ha sido creado exitosamente, recibira el mensaje a la hora indicada`
+          );
+          await triggerEvents();
           break;
         case "helpdate":
-          client.sendMessage(msg.from,"!setEvent {mensaje usando _ sin espacios} {hora} {minuto} {dia} {mes} {año}")
+          client.sendMessage(
+            msg.from,
+            "🤖 !setEvent {mensaje usando _ sin espacios} {hora} {minuto} {dia} {mes} {año}"
+          );
           break;
         default:
-          console.log("ERROR");
+          console.log(`ERROR: comando !${command} no encontrado`);
           client.sendMessage(
             msg.from,
             `Error: No se ha encontrado el comando "!${command}"`
@@ -165,4 +178,52 @@ client.initialize();
 
 function isAdmin(user) {
   return admins.includes(user);
+}
+
+async function triggerEvents() {
+  let timeToEvent;
+  let events = await storage.getItem("events");
+  events.map((e) => {
+    if (!IntoArray(e)) {
+      timeToEvent = getRemainingTime(e.date);
+      eventsReady.push(e);
+      setTimeout(
+        async () => {
+          events = await storage.getItem("events");
+          client.sendMessage(e.from, e.message.replaceAll("_", " "));
+          removeFromArray(events, e);
+          removeFromArray(eventsReady, e);
+          await storage.setItem("events", events);
+        },
+        timeToEvent >= 0 ? timeToEvent : 0
+      );
+    }
+  });
+}
+
+function removeFromArray(array, item) {
+  let i,index
+  while (i<array.length&&!equalObjects(array[i], item)) {
+    i++;
+  }
+  if (i==array.length)
+    index=-1
+  else
+    index=i  
+  if (index !== -1) {
+    array.splice(index, 1);
+  }
+}
+
+function IntoArray(event){
+  let a=0
+  eventsReady.map((e) => {
+    if (equalObjects(e,event)) 
+      a++
+  });
+  return a==1
+}
+
+function equalObjects(a,b){
+  return a.from==b.from&&a.message==b.message&&a.date==b.date
 }
