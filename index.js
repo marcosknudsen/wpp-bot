@@ -33,7 +33,6 @@ client.on("ready", async () => {
   eventsReady = [];
   admins = await storage.getItem("admins");
   streamers = await storage.getItem("streamers");
-  RemoveArray = [];
   await triggerEvents();
 });
 
