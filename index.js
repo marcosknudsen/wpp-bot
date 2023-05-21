@@ -140,11 +140,11 @@ client.on("message", async (msg) => {
         case "setevent":
           let a = await storage.getItem("events");
           let events = a !== undefined ? a : [];
-          let eventTime=createDate(arg[1],arg[2],arg[3],arg[4],arg[5])
+          let eventTime = createDate(arg[1], arg[2], arg[3], arg[4], arg[5]);
           events.push({
             from: msg.from,
             message: arg[0],
-            date:eventTime
+            date: eventTime,
           });
           await storage.updateItem("events", events);
           client.sendMessage(
@@ -201,28 +201,24 @@ async function triggerEvents() {
 }
 
 function removeFromArray(array, item) {
-  let i,index
-  while (i<array.length&&!equalObjects(array[i], item)) {
+  let i, index;
+  while (i < array.length && !equalObjects(array[i], item)) {
     i++;
   }
-  if (i==array.length)
-    index=-1
-  else
-    index=i  
+  index = i != array.length ? i : -1;
   if (index !== -1) {
     array.splice(index, 1);
   }
 }
 
-function IntoArray(event){
-  let a=0
+function IntoArray(event) {
+  let a = 0;
   eventsReady.map((e) => {
-    if (equalObjects(e,event)) 
-      a++
+    if (equalObjects(e, event)) a++;
   });
-  return a==1
+  return a == 1;
 }
 
-function equalObjects(a,b){
-  return JSON.stringify(a)==JSON.stringify(b)
+function equalObjects(a, b) {
+  return JSON.stringify(a) == JSON.stringify(b);
 }
