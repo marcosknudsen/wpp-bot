@@ -50,7 +50,7 @@ client.on("message", async (msg) => {
             if (!isNaN(light))
               client.sendMessage(
                 msg.from,
-                (await isOn(light)) ? "Encendidas" : "Apagadas"
+                "Luces "+(await isOn(light)) ? "Encendidas" : "Apagadas"
               );
           }
           break;
