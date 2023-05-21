@@ -10,7 +10,6 @@ import {
   getMatchesString,
   getResultsString,
 } from "./getMatchesString.js";
-import getImage from "../ia-image-generator/getImage.js";
 import getCommands from "./getCommands.js";
 import { getRemainingTime, createDate } from "../events/index.js";
 
