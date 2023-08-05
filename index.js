@@ -1,25 +1,24 @@
-import wpp from "whatsapp-web.js";
-import QRCode from "qrcode";
-import * as dotenv from "dotenv";
-import storage from "node-persist";
-import getLiveStreams from "./getStreamInfo.js";
-import { isOn, turnOff, turnOn } from "../HUE/hue.js";
-import {
-  getLiveMatchesString,
-  getMatchesByIdString,
-  getMatchesString,
-  getResultsString,
-} from "./getMatchesString.js";
-import getCommands from "./getCommands.js";
-import { getRemainingTime, createDate } from "../events/index.js";
+const wpp = require("whatsapp-web.js");
+const QRCode = require("qrcode");
+require("dotenv").config();
+const storage = require("node-persist");
+const getLiveStreams = require("./getStreamInfo.js");
+const hue = require("../HUE/hue.js");
+const matches = require("./getMatchesString.js");
+const event = require("../events/index.js");
+const { getMessage } = require("./getMessage.js");
+const { getCommands } = require("./getCommands.js");
 
-dotenv.config();
-
-const client = new wpp.Client();
+const client = new wpp.Client({
+  authStrategy: new wpp.LocalAuth({ clientId: process.env.WPP_CLIENT_ID }),
+});
 let admins;
 let streamers;
 let eventsReady;
-await storage.init();
+async function start() {
+  await storage.init();
+}
+start().then(() => client.initialize());
 
 client.on("qr", (qr) => {
   QRCode.toString(qr, { type: "terminal", small: true }, function (err, url) {
@@ -37,7 +36,10 @@ client.on("ready", async () => {
 
 client.on("message", async (msg) => {
   if (msg.body[0] == "!") {
-    let [command, ...arg] = getCommands(msg.body);
+    let command, arg;
+    if (!msg.body.startsWith("!setevent"))
+      [command, ...arg] = getCommands(msg.body);
+    else [command, ...arg] = getMessage(msg.body);
     try {
       switch (command.toLowerCase()) {
         case "streams":
@@ -49,26 +51,26 @@ client.on("message", async (msg) => {
             if (!isNaN(light))
               client.sendMessage(
                 msg.from,
-                "Luces "+(await isOn(light)) ? "Encendidas" : "Apagadas"
+                "Luces " + ((await hue.isOn(light)) ? "encendidas" : "apagadas")
               );
           }
           break;
         case "turnon":
           if (isAdmin(msg.from)) {
             let light = parseInt(arg);
-            if (!isNaN(light)) turnOn(light);
+            if (!isNaN(light)) await hue.turnOn(light);
           }
           break;
         case "turnoff":
           if (isAdmin(msg.from)) {
             let light = parseInt(arg);
-            if (!isNaN(light)) turnOff(light);
+            if (!isNaN(light)) await hue.turnOff(light);
           }
           break;
         case "aldosivi":
           client.sendMessage(
             msg.from,
-            "🦈 " + (await getMatchesByIdString(22))
+            "🦈 " + (await matches.getMatchesByIdString(22))
           );
           break;
         case "matches":
@@ -78,7 +80,11 @@ client.on("message", async (msg) => {
               msg.from,
               "Error: Compruebe haber insertado el team id correctamente (!matches {id})"
             );
-          else client.sendMessage(msg.from, await getMatchesByIdString(team));
+          else
+            client.sendMessage(
+              msg.from,
+              await matches.getMatchesByIdString(team)
+            );
           break;
         case "login":
           if (arg == process.env.PASSWORD && !isAdmin(msg.from)) {
@@ -116,33 +122,40 @@ client.on("message", async (msg) => {
           }
           break;
         case "todaymatches":
-          client.sendMessage(msg.from, await getMatchesString(true));
+          client.sendMessage(msg.from, await matches.getMatchesString(true));
           break;
         case "tomorrowmatches":
-          client.sendMessage(msg.from, await getMatchesString(false));
+          client.sendMessage(msg.from, await matches.getMatchesString(false));
           break;
         case "chelsea":
           client.sendMessage(
             msg.from,
-            "🔵 " + (await getMatchesByIdString(531))
+            "🔵 " + (await matches.getMatchesByIdString(531))
           );
           break;
         case "livematches":
-          client.sendMessage(msg.from, await getLiveMatchesString());
+          client.sendMessage(msg.from, await matches.getLiveMatchesString());
           break;
         case "todayresults":
-          client.sendMessage(msg.from, await getResultsString(true));
+          client.sendMessage(msg.from, await matches.getResultsString(true));
           break;
         case "yesterdayresults":
-          client.sendMessage(msg.from, await getResultsString(false));
+          client.sendMessage(msg.from, await matches.getResultsString(false));
           break;
         case "setevent":
           let a = await storage.getItem("events");
           let events = a !== undefined ? a : [];
-          let eventTime = createDate(arg[1], arg[2], arg[3], arg[4], arg[5]);
+          let message = arg[0];
+          let eventTime = event.createDate(
+            arg[1],
+            arg[2],
+            arg[3],
+            arg[4],
+            arg[5]
+          );
           events.push({
             from: msg.from,
-            message: arg[0],
+            message: message,
             date: eventTime,
           });
           await storage.updateItem("events", events);
@@ -172,23 +185,17 @@ client.on("message", async (msg) => {
   }
 });
 
-client.initialize();
-
-function isAdmin(user) {
-  return admins.includes(user);
-}
-
 async function triggerEvents() {
   let timeToEvent;
   let events = await storage.getItem("events");
   events.map((e) => {
     if (!IntoArray(e)) {
-      timeToEvent = getRemainingTime(e.date);
+      timeToEvent = event.getRemainingTime(e.date);
       eventsReady.push(e);
       setTimeout(
         async () => {
           events = await storage.getItem("events");
-          client.sendMessage(e.from, e.message.replaceAll("_", " "));
+          client.sendMessage(e.from, e.message);
           removeFromArray(events, e);
           removeFromArray(eventsReady, e);
           await storage.setItem("events", events);
@@ -197,6 +204,10 @@ async function triggerEvents() {
       );
     }
   });
+}
+
+function isAdmin(user) {
+  return admins.includes(user);
 }
 
 function removeFromArray(array, item) {

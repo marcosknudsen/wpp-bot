@@ -1,6 +1,6 @@
-export default (string)=>{
-  string=string.replace("!","")
+function getCommands(string) {
+  string = string.replace("!", "");
   return string.split(" ");
-};
+}
 
-
+module.exports = { getCommands };

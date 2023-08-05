@@ -1,8 +1,8 @@
-import fetch from "node-fetch";
-import * as dotenv from "dotenv";
-dotenv.config();
+const fetch=require("node-fetch")
+require("dotenv").config()
 
-export default async function getLiveStreams(streamerArray) {
+
+exports.getLiveStreams=async (streamerArray)=>{
   let string;
   let url="https://api.twitch.tv/helix/streams?"
   for (let i of streamerArray){

@@ -1,14 +1,7 @@
-import {
-  getMatchesById,
-  getMatchesToday,
-  getLiveMatches,
-  getTodayResults,
-  getYesterdayResults,
-  getTomorrowMatches
-} from "../promiedos/index.js";
+const promiedos = require("../promiedos/index.js");
 
-export async function getMatchesByIdString(id) {
-  let response = await getMatchesById(id);
+exports.getMatchesByIdString = async (id) => {
+  let response = await promiedos.getMatchesById(id);
   let string = `Proximos partidos de ${response.teamname}:`;
   let date;
   for (let i of response.matches) {
@@ -16,28 +9,25 @@ export async function getMatchesByIdString(id) {
     if (date == "A Conf.") {
       date = " TBD ";
     }
-    string =
-      string + `\n${date} | ${i.hoa == "H" ? "L" : "V"} vs ${i.against}`;
+    string = string + `\n${date} | ${i.hoa == "H" ? "L" : "V"} vs ${i.against}`;
   }
   return string;
-}
+};
 
-export async function getMatchesString(today) {
-  let response 
-  if (today)
-    response=await getMatchesToday();
-  else
-    response=await getTomorrowMatches()
-  let string = `⚽ Partidos de ${today?"hoy":"mañana"}:`;
+exports.getMatchesString = async (today) => {
+  let response;
+  if (today) response = await promiedos.getMatchesToday();
+  else response = await promiedos.getTomorrowMatches();
+  let string = `⚽ Partidos de ${today ? "hoy" : "mañana"}:`;
   for (let i of response) {
     string = string + `\n${i.time} - ${i.localTeam} vs ${i.awayTeam}`;
   }
   if (response.length > 0) return string;
-  else return `No hay hay partidos para el dia de ${today?"hoy":"mañana"}`;
-}
+  else return `No hay hay partidos para el dia de ${today ? "hoy" : "mañana"}`;
+};
 
-export async function getLiveMatchesString() {
-  let response = await getLiveMatches();
+exports.getLiveMatchesString = async () => {
+  let response = await promiedos.getLiveMatches();
   let string = "⚽ Partidos en vivo:";
   for (let i of response) {
     string =
@@ -46,18 +36,18 @@ export async function getLiveMatchesString() {
   }
   if (response.length > 0) return string;
   else return "No hay partidos en vivo";
-}
+};
 
-export async function getResultsString(today){
-  let response
-  let string=`⚽ Resultados de ${today?"hoy":"ayer"}:`
-  if (today)
-    response=await getTodayResults();
-  else
-    response=await getYesterdayResults()
-  for (let i of response){
-    string=string+`\n${i.localTeam} [${i.localScore}] - [${i.awayScore}] ${i.awayTeam}`
+exports.getResultsString = async (today) => {
+  let response;
+  let string = `⚽ Resultados de ${today ? "hoy" : "ayer"}:`;
+  if (today) response = await promiedos.getTodayResults();
+  else response = await promiedos.getYesterdayResults();
+  for (let i of response) {
+    string =
+      string +
+      `\n${i.localTeam} [${i.localScore}] - [${i.awayScore}] ${i.awayTeam}`;
   }
-  if (response.length>0)return string
-  else return `Aún no hay resultados de ${today?"hoy":"ayer"}`
-}
+  if (response.length > 0) return string;
+  else return `Aún no hay resultados de ${today ? "hoy" : "ayer"}`;
+};
