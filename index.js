@@ -168,7 +168,7 @@ client.on("message", async (msg) => {
         case "helpdate":
           client.sendMessage(
             msg.from,
-            "🤖 !setEvent {mensaje usando _ sin espacios} {hora} {minuto} {dia} {mes} {año}"
+            "🤖 !setEvent {mensaje entre parentesis} {hora} {minuto} {dia} {mes} {año}"
           );
           break;
         case "getevents":
