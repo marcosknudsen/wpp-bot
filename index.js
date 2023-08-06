@@ -171,6 +171,30 @@ client.on("message", async (msg) => {
             "🤖 !setEvent {mensaje usando _ sin espacios} {hora} {minuto} {dia} {mes} {año}"
           );
           break;
+        case "getevents":
+          string = "";
+          let aevents = await storage.getItem("events");
+          let d;
+          aevents.map((e) => {
+            d = new Date(e.date);
+            if (e.from == msg.from) {
+              let minutes;
+              let hours;
+              if (d.getMinutes() < 10) {
+                minutes = "0" + d.getMinutes().toString();
+              } else {
+                minutes = d.getMinutes();
+                hours = d.getHours();
+              }
+              if (d.getHours() <= 9) hours = "0" + d.getHours().toString();
+              else hours = d.getHours();
+              string += `${hours}:${minutes} - ${d.getDate()}/${d.getMonth()}: ${
+                e.message
+              }\n`;
+            }
+          });
+          client.sendMessage(msg.from, string);
+          break;
         default:
           console.log(`ERROR: comando !${command} no encontrado`);
           client.sendMessage(
